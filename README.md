@@ -74,31 +74,7 @@ results/creatives.csv
 
 7. Streamlit displays results to user
 
-# for image: 
-curl --location --globoff "https://graph.facebook.com/v19.0/act_1324697116076599/adimages" ^
---form "access_token=EAAQeYqt2zH4BQPzq34..." ^
---form "file=@C:/Users/Adsparkx/Downloads/pexels-ron-lach-9586529.png"
-# 
-curl --location --globoff "https://graph.facebook.com/v19.0/act_1324697116076599/adimages" ^
---form "access_token=EAAQeYqt2zH4BQPzq34ZA149r3oXcwXRr40zBu14Q0fi3aR2iAY3t3OJPmvKjzUHxyNqsn0ZCFEKepADXLYotDTxZBhBpLj7o1y9lsHVFcwzxg1FlXNM9reBQTr69VinyepwthQSGLy5D7y2YGZAASWZChlGRVAqyNlj0Fbph7wlLddfgqPxRCCCNWTNGU4LdTCNRw" ^
---form "file=@C:/Users/Adsparkx/Downloads/pexels-ron-lach-9586529.png"
 
-# for videos
-curl --location "https://graph.facebook.com/v19.0/act_1324697116076599/advideos" ^
---form "access_token=EAAQeYqt2zH4BQPzq34..." ^
---form "file=@C:/Users/Adsparkx/Downloads/8028803-uhd_2160_3840_24fps.mp4" ^
---form "title=Anything"
-
-# curl --location "https://graph.facebook.com/v19.0/act_1324697116076599/advideos" ^
---form "access_token=EAAQeYqt2zH4BQPzq34ZA149r3oXcwXRr40zBu14Q0fi3aR2iAY3t3OJPmvKjzUHxyNqsn0ZCFEKepADXLYotDTxZBhBpLj7o1y9lsHVFcwzxg1FlXNM9reBQTr69VinyepwthQSGLy5D7y2YGZAASWZChlGRVAqyNlj0Fbph7wlLddfgqPxRCCCNWTNGU4LdTCNRw" ^
---form "file=@C:/Users/Adsparkx/Downloads/8028803-uhd_2160_3840_24fps.mp4" ^
---form "title=Anything"
-
-
-
-
-Image Upload → CSV
-| filename | type  | image_hash | status |
-
-Video Upload → CSV
-filename	type  creative_id	video_hash	status
+# Output: Download as results
+Image/videos Upload → CSV
+file type  creative_id	video_hash	status
