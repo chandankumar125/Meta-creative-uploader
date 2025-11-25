@@ -77,4 +77,4 @@ results/creatives.csv
 
 # Output: Download as results
 Image/videos Upload → CSV
-file type  creative_id	video_hash	status
+file type  creative_id	image_hash	status

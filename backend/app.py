@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-ACCESS_TOKEN = "EAAQeYqt2zH4BQNCNanWcYhAjZBZBtPlg4cjBHrc5E6y4jwgMVePMR5f7sEV7gbSGrHfm7NrfWB7nRHzL6sBZAVZAZCVpGAeSDsZBoIQSzNkSKdYekZCescn8Ytei4gEBNb0AwdrYosiK12wyXqztQdJSyf8FuqooraVdzATkiL5HVg64EuquT7oiwSwD24hUedWch7P"
-AD_ACCOUNT_ID = "1324697116076599"
+ACCESS_TOKEN="EAAQeYqt2zH4BQMNm9RRLNJAuAfnqQ72wfdNFJ2WxbL9XhPlHeBVo41OjpTvkZAEIN0ySZCyHf3lC2f1YiQJ32itKRQXq6Yz2xt5RNsKk2RXryCEGxhSbAaUgLaLwKrVL7uu11scZBnSRWoLvqPkwZBePpDhz2xzMUjUads91cEH6bYZBwkO5ZBqtDavfL0nZARjSz3z"
+AD_ACCOUNT_ID="1324697116076599"
 
 
 # -------------------------------
@@ -17,7 +17,7 @@ def upload_image():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
-
+    # Save temporarily
     temp_path = os.path.join("temp", file.filename)
     os.makedirs("temp", exist_ok=True)
     file.save(temp_path)
@@ -44,7 +44,7 @@ def upload_video():
         return jsonify({"error": "No video uploaded"}), 400
 
     file = request.files['file']
-
+    # Save temporarily
     temp_path = os.path.join("temp", file.filename)
     os.makedirs("temp", exist_ok=True)
     file.save(temp_path)
