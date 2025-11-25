@@ -107,7 +107,7 @@ if st.button("Start Upload"):
     # timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with file:
         writer = csv.writer(file)
-        writer.writerow(["file type", "creative_id", "image_hash"])
+        # writer.writerow(["file type", "creative_id", "image_hash"])
         # WRITE HEADER FOR NEW FILE
         if new_file:
             writer.writerow(["file type", "creative_id", "image_hash"])
