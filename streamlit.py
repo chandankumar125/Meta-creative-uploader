@@ -77,12 +77,25 @@ if st.button("Start Upload"):
 
         # VIDEO
         elif file_ext.endswith(".mp4"):
-            creative_id = ""
+            print('video section')
+            print('data: in the video sec:', data)
+            creative_id = data['id']
+            
+            # Ensure the file is present in the data dictionary and it's in the expected format
             if f.name in data and isinstance(data[f.name], dict):
+                # Extract the creative_id directly
+                print('test:', creative_id)
                 creative_id = data[f.name].get("id", "")
+            
+            # Skip if the creative_id is already processed
             if creative_id and creative_id in seen_creative_ids:
+                print('already exits')
                 continue
+            
+            # Add the creative_id to the set of seen IDs
             seen_creative_ids.add(creative_id)
+            
+            # Append to csv_rows with the extracted creative_id
             csv_rows.append(["video", creative_id, ""])  # [file type, creative_id, image_hash]
 
     # SAVE CSV (SAFE)
