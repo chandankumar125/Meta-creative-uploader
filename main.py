@@ -76,30 +76,39 @@ async def upload_video(file: UploadFile = File(...), title: Optional[str] = "Upl
 # -------------------------------
 # Upload Thumbnail
 # -------------------------------
-@app.post("/upload-thumbnail")
-async def upload_thumbnail(video_id: str, file: UploadFile = File(...)):
-    if not file:
-        raise HTTPException(status_code=400, detail="No thumbnail uploaded")
-
-    temp_path = os.path.join(TEMP_DIR, file.filename)
-    with open(temp_path, "wb") as f:
-        f.write(await file.read())
+@app.get("/video-thumbnails")
+async def get_video_thumbnails(video_id: str):
+    """
+    Retrieve thumbnails of a video from Facebook Graph API.
+    """
+    if not video_id:
+        raise HTTPException(status_code=400, detail="video_id is required")
 
     url = f"https://graph.facebook.com/v24.0/{video_id}/thumbnails"
     
-    with open(temp_path, "rb") as f:
-        response = requests.post(
-            url,
-            files={"source": f},
-            data={"access_token": ACCESS_TOKEN}
-        )
+    response = requests.get(
+        url,
+        params={"access_token": ACCESS_TOKEN}
+    )
 
-    os.remove(temp_path)
     data = response.json()
     
-    thumbnail_id = data.get("id", None)
-    
-    return {"success": True, "thumbnail_id": thumbnail_id, **data}
+    if "error" in data:
+        # Return meaningful error to the client
+        return {"success": False, "error": data["error"]}
+
+    thumbnails = []
+    for item in data.get("data", []):
+        thumbnails.append({
+            "id": item.get("id"),
+            "uri": item.get("uri"),
+            "height": item.get("height"),
+            "width": item.get("width"),
+            "scale": item.get("scale"),
+            "is_preferred": item.get("is_preferred")
+        })
+
+    return {"success": True, "video_id": video_id, "thumbnails": thumbnails}
 
 # -------------------------------
 # Home route

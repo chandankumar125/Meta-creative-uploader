@@ -1,80 +1,116 @@
-How this will works
-1. Project Structure
-meta_upload_tool/
-│
-├── backend/
-│   ├── app.py
-│   ├── meta_api.py
-│   ├── storage.py
-│   ├── config.py
-│   ├── requirements.txt
-│
-├── uploads/
-│   ├── temp/
-│
-├── frontend/
-│   ├── streamlit.py
-│
-├── results/
-│   ├── creatives.csv
-│
+### **README.md**
+
+```markdown
+# Meta Upload API
+
+A FastAPI-based API to upload images and videos to Meta (Facebook) Ads, and retrieve video thumbnails using the Facebook Graph API (v24.0).  
+The API includes Swagger documentation for easy testing.
+
+---
+
+## Features
+
+- Upload image to Meta Ads → returns `image_hash`.
+- Upload video to Meta Ads → returns `video_creative_id`.
+- Retrieve thumbnails for a video → returns list of thumbnails with `id`, `uri`, `height`, `width`, and `is_preferred`.
+
+---
+
+## Folder Structure
+
+```
+
+meta_upload_api/
+├── main.py           # FastAPI application
+├── requirements.txt  # Python dependencies
+├── temp/             # Temporary folder for uploads (auto-created)
+├── .gitignore        # Ignore temporary files, env, etc.
 └── README.md
 
-2. Install Requirements and env
+````
+
+---
+
+## Requirements
+
+- Python 3.10+
+- FastAPI
+- Uvicorn
+- Requests
+- Python-Multipart
+
+---
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/meta_upload_api.git
+cd meta_upload_api
+````
+
+2. Create a virtual environment:
+
+```bash
 python -m venv venv
-.\venv\Scripts\activate
+source venv/bin/activate   # Linux / Mac
+venv\Scripts\activate      # Windows
+```
 
-cd meta_upload_tool/backend
+3. Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-3. Run Backend (Flask) python .\backend\app.py or 
+4. Set your Meta Ads credentials in `main.py`:
 
-cd meta_upload_tool/backend
-python app.py
-Backend runs at:
-👉 http://127.0.0.1:5000
+```python
+AD_ACCOUNT_ID = "YOUR_AD_ACCOUNT_ID"
+ACCESS_TOKEN = "YOUR_ACCESS_TOKEN"
+```
 
-4. Frontend requirements: In other terminal
-cd meta_upload_tool/frontend
-Pip install streamlit   or (without pyarrow) pip install streamlit --no-cache-dir --only-binary=:all:
+---
 
-streamlit run streamlit.py
-Streamlit UI launches at:
-👉 http://localhost:8501
+## Running the API
 
-This UI will:
-Upload images/videos
-Send them to Flask backend
-Show Creative ID + Hash
-Display raw API response
+Start the FastAPI server:
 
+```bash
+uvicorn main:app --reload
+```
 
-## Upload Flow (How System Works)
-Streamlit UI → Flask Backend → Meta API → CSV
-1. User uploads media in Streamlit
-⬇
-2. UI sends files to Flask /upload
-⬇
-3. Flask saves files to /uploads/temp/
-⬇
-4. Backend calls:
+* Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-/adimages → for JPG/PNG
+---
 
-/advideos → for MP4
-⬇
+## API Endpoints
 
-5. Meta returns:
-creative ID
-image/video hash
-⬇
+1. **Upload Image**
 
-6. Backend writes results to:
-results/creatives.csv
+   * `POST /upload-image`
+   * Form-data: `file` (image)
+   * Returns: `image_hash`
 
-7. Streamlit displays results to user
+2. **Upload Video**
 
+   * `POST /upload-video`
+   * Form-data: `file` (video), optional `title`
+   * Returns: `video_creative_id`
 
-# Output: Download as results
-Image/videos Upload → CSV
-file type  creative_id	image_hash	status
+3. **Get Video Thumbnails**
+
+   * `GET /video-thumbnails?video_id=<VIDEO_ID>`
+   * Returns: Array of thumbnail objects with `id`, `uri`, `height`, `width`, `scale`, `is_preferred`
+
+---
+
+## Notes
+
+* All temporary uploads are stored in `temp/` and removed after processing.
+* Ensure your access token has proper permissions (`ads_management`, `business_management`) to access video thumbnails or upload ads.
+* Use Graph API v24.0 endpoints to ensure compatibility.
+
+---
