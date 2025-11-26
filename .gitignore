@@ -31,3 +31,6 @@ build/
 
 # Environment variables
 *.env
+
+# CSV files
+*.csv
