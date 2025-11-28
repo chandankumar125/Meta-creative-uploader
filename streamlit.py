@@ -2,16 +2,34 @@ import streamlit as st
 import requests
 import csv
 import os
-from datetime import datetime
+import json
 
 
-# Safe CSV open function to avoid file locking errors
+# -----------------------------
+# Safe JSON Loader
+# -----------------------------
+def safe_json(res):
+    try:
+        return res.json()
+    except:
+        return {
+            "error": "Non-JSON backend response",
+            "status": res.status_code,
+            "text": res.text[:300]
+        }
+
+
+# -----------------------------
+# Safe CSV file opener
+# -----------------------------
 def safe_open_csv(base_path):
     folder = os.path.dirname(base_path)
     name = os.path.basename(base_path)
     base, ext = os.path.splitext(name)
+
     attempt = 0
     path = base_path
+
     while True:
         try:
             return open(path, "a", newline="", encoding="utf-8"), path
@@ -19,7 +37,10 @@ def safe_open_csv(base_path):
             attempt += 1
             path = os.path.join(folder, f"{base}_{attempt}{ext}")
 
-# UI
+
+# -----------------------------
+# STREAMLIT UI
+# -----------------------------
 st.title("Meta Creative Uploader")
 
 uploaded_files = st.file_uploader(
@@ -36,85 +57,112 @@ if st.button("Start Upload"):
     results = []
     csv_rows = []
 
-    # Track duplicates
     seen_hashes = set()
-    seen_creative_ids = set()
+    seen_videos = set()
 
-    for f in uploaded_files:
-        file_ext = f.name.lower()
+    progress = st.progress(0)
+    total = len(uploaded_files)
 
-        # Pick endpoint
-        if file_ext.endswith((".jpg", ".jpeg", ".png")):
+    for idx, f in enumerate(uploaded_files):
+        progress.progress((idx + 1) / total)
+
+        filename = f.name.lower()
+
+        # Detect type
+        if filename.endswith(("jpg", "jpeg", "png")):
             endpoint = "http://localhost:5000/upload-image"
-        elif file_ext.endswith(".mp4"):
+            file_type = "image"
+        elif filename.endswith("mp4"):
             endpoint = "http://localhost:5000/upload-video"
+            file_type = "video"
         else:
             st.warning(f"Unsupported file: {f.name}")
             continue
 
-        # Backend request
+        # -----------------------
+        # API REQUEST
+        # -----------------------
         try:
-            res = requests.post(
-                endpoint,
-                files={"file": (f.name, f.getvalue())}
-            )
-            data = res.json()
-        except:
-            data = {"error": "Non-JSON backend response"}
+            res = requests.post(endpoint, files={"file": (f.name, f.getvalue())})
+            data = safe_json(res)
+        except Exception as e:
+            data = {"error": "Request failed", "detail": str(e)}
 
+        # Save raw result
         results.append({f.name: data})
 
-        # IMAGE
-        if file_ext.endswith((".jpg", ".jpeg", ".png")):
-            image_hash = ""
-            if "images" in data and isinstance(data["images"], dict):
-                first_key = next(iter(data["images"]))
-                image_hash = data["images"][first_key].get("hash", "")
-            #if image_hash and image_hash in seen_hashes:
-            #    continue
-            #seen_hashes.add(image_hash)
-            csv_rows.append(["image", "", image_hash])  # [file type, creative_id, image_hash]
+        # Show errors
+        if "error" in data:
+            st.error(f"Error uploading {f.name}")
+            st.json(data)
+            continue
 
-        # VIDEO
-        elif file_ext.endswith(".mp4"):
-            print('video section')
-            print('data: in the video sec:', data)
-            creative_id = data['id']
-            
-            # Ensure the file is present in the data dictionary and it's in the expected format
-            if f.name in data and isinstance(data[f.name], dict):
-                # Extract the creative_id directly
-                print('test:', creative_id)
-                creative_id = data[f.name].get("id", "")
-            
-            # Skip if the creative_id is already processed
-            if creative_id and creative_id in seen_creative_ids:
-                print('already exits')
+        # -----------------------
+        # Extract fields safely
+        # -----------------------
+        image_hash = (
+            data.get("image_hash")
+            or data.get("hash")
+            or data.get("md5")
+            or ""
+        )
+
+        video_id = data.get("video_id") or data.get("id") or ""
+        thumbnail_id = data.get("thumbnail_id") or data.get("thumb_id") or ""
+        creative_id = (
+            data.get("creative_id") or
+            data.get("id") or
+            data.get("creative") or
+            ""
+        )
+
+        # -----------------------
+        # Duplicate Protection
+        # -----------------------
+        if file_type == "image":
+            if image_hash in seen_hashes:
                 continue
-            
-            # Add the creative_id to the set of seen IDs
-            seen_creative_ids.add(creative_id)
-            
-            # Append to csv_rows with the extracted creative_id
-            csv_rows.append(["video", creative_id, ""])  # [file type, creative_id, image_hash]
+            seen_hashes.add(image_hash)
 
-    # SAVE CSV (SAFE)
+            csv_rows.append([
+                "image",
+                image_hash,
+                "",
+                "",
+                ""
+            ])
+
+        elif file_type == "video":
+            if video_id in seen_videos:
+                continue
+            seen_videos.add(video_id)
+
+            csv_rows.append([
+                "video",
+                image_hash,
+                video_id,
+                thumbnail_id,
+                creative_id
+            ])
+
+    # -----------------------
+    # SAVE CSV
+    # -----------------------
     os.makedirs("results", exist_ok=True)
     csv_path = "results/creatives.csv"
 
-    file, path_used = safe_open_csv(csv_path)
-    new_file = not os.path.exists(path_used)
-    # timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    is_new = not os.path.exists(csv_path)
+    file, actual_path = safe_open_csv(csv_path)
+
     with file:
         writer = csv.writer(file)
-        # writer.writerow(["file type", "creative_id", "image_hash"])
-        # WRITE HEADER FOR NEW FILE
-        if new_file:
-            writer.writerow(["file type", "creative_id", "image_hash"])
+        if is_new:
+            writer.writerow(
+                ["file_type", "image_hash", "video_id", "thumbnail_id", "creative_id"]
+            )
         writer.writerows(csv_rows)
 
-
-
+    # Output
     st.success("Upload Complete!")
     st.json(results)
-    st.info(f"Saved to result/creatives.csv → {path_used}")
+    st.info(f"Saved to: {actual_path}")
