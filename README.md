@@ -1,80 +1,35 @@
-How this will works
-1. Project Structure
-meta_upload_tool/
-│
-├── backend/
-│   ├── app.py
-│   ├── meta_api.py
-│   ├── storage.py
-│   ├── config.py
-│   ├── requirements.txt
-│
-├── uploads/
-│   ├── temp/
-│
-├── frontend/
-│   ├── streamlit.py
-│
-├── results/
-│   ├── creatives.csv
-│
-└── README.md
+Root Directory
 
-2. Install Requirements and env
+# server.py
+Initialize FastAPI app.
+Load environment variables.
+Mount facebook router.
+Facebook Module (facebook/)
+
+# auth.py
+get_login_url(): Construct Facebook Login Dialog URL.
+exchange_code_for_token(code): Exchange authorization code for short-lived access token.
+get_long_lived_token(short_token): Exchange short-lived token for long-lived token.
+# router.py
+GET /auth/login: Redirect user to Facebook Login.
+GET /auth/callback: Handle Facebook redirect, exchange code, and store token.
+# accounts.py
+Placeholder/Basic implementation for fetching ad accounts (requires valid token).
+# upload_media.py
+Placeholder for media upload logic.
+# csv_handler.py
+Placeholder for CSV processing.
+
+Manual Verification
+Start Server: Run uvicorn server:app --reload.
+Initiate Login: Navigate to http://localhost:8000/auth/login in a browser.
+Authorize: Log in to Facebook and authorize the app.
+Check Callback: Verify redirection to http://localhost:8000/auth/callback and successful token retrieval (check logs or response).
+Verify Token: Use the retrieved token to fetch ad accounts (if      accounts.py is implemented).
+
+
+
 python -m venv venv
-.\venv\Scripts\activate
-
-cd meta_upload_tool/backend
+venv\Scripts\activate
 pip install -r requirements.txt
-
-3. Run Backend (Flask) python .\backend\app.py or 
-
-cd meta_upload_tool/backend
-python app.py
-Backend runs at:
-👉 http://127.0.0.1:5000
-
-4. Frontend requirements: In other terminal
-cd meta_upload_tool/frontend
-Pip install streamlit   or (without pyarrow) pip install streamlit --no-cache-dir --only-binary=:all:
-
-streamlit run streamlit.py
-Streamlit UI launches at:
-👉 http://localhost:8501
-
-This UI will:
-Upload images/videos
-Send them to Flask backend
-Show Creative ID + Hash
-Display raw API response
-
-
-## Upload Flow (How System Works)
-Streamlit UI → Flask Backend → Meta API → CSV
-1. User uploads media in Streamlit
-⬇
-2. UI sends files to Flask /upload
-⬇
-3. Flask saves files to /uploads/temp/
-⬇
-4. Backend calls:
-
-/adimages → for JPG/PNG
-
-/advideos → for MP4
-⬇
-
-5. Meta returns:
-creative ID
-image/video hash
-⬇
-
-6. Backend writes results to:
-results/creatives.csv
-
-7. Streamlit displays results to user
-
-
-# Output: Download as results
-Image/videos Upload → CSV
-file type  creative_id	image_hash	status
+uvicorn main:app --reload
