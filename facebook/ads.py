@@ -1,17 +1,32 @@
 import requests
+import json
 
 # --------------------------
 # 1. Create Campaign
 # --------------------------
-def create_campaign(access_token, account_id, name, objective):
+def create_campaign(access_token, account_id, name, objective, special_ad_categories=None):
+    """
+    Create a Facebook campaign.
+    special_ad_categories: list, required by Meta API even if empty.
+    """
+    if not account_id.startswith('act_'):
+        account_id = f"act_{account_id}"
+
+    if special_ad_categories is None:
+        special_ad_categories = []
+
     url = f"https://graph.facebook.com/v21.0/{account_id}/campaigns"
     payload = {
         "access_token": access_token,
         "name": name,
         "objective": objective,
-        "status": "PAUSED"
+        "status": "PAUSED",
+        "special_ad_categories": json.dumps(special_ad_categories)
     }
+    
+    print(f"DEBUG - Creating campaign with payload: {payload}")
     res = requests.post(url, data=payload).json()
+    print(f"DEBUG - Response: {res}")
     if "error" in res:
         raise Exception(f"Error creating campaign: {res['error']['message']}")
     return res["id"]
@@ -22,7 +37,8 @@ def create_campaign(access_token, account_id, name, objective):
 # --------------------------
 def create_adset(access_token, account_id, name, daily_budget,
                  optimization_goal, pixel_id, campaign_id, start_time, end_time):
-
+    if not account_id.startswith('act_'):
+        account_id = f"act_{account_id}"
     url = f"https://graph.facebook.com/v21.0/{account_id}/adsets"
 
     payload = {
@@ -49,7 +65,8 @@ def create_adset(access_token, account_id, name, daily_budget,
 # --------------------------
 def create_creative(access_token, account_id, ad_name, image_hash, video_id,
                     primary_text, headline, call_to_action, website_url, page_id):
-
+    if not account_id.startswith('act_'):
+        account_id = f"act_{account_id}"
     url = f"https://graph.facebook.com/v21.0/{account_id}/adcreatives"
 
     link_data = {
@@ -60,8 +77,6 @@ def create_creative(access_token, account_id, ad_name, image_hash, video_id,
 
     if video_id:
         link_data["video_id"] = video_id
-        # For video ads, we might need a thumbnail. 
-        # If the CSV provides one, we can add it. For now, let's assume auto-generated or optional.
     elif image_hash:
         link_data["image_hash"] = image_hash
     else:
@@ -86,6 +101,8 @@ def create_creative(access_token, account_id, ad_name, image_hash, video_id,
 # 4. Create Ad
 # --------------------------
 def create_ad(access_token, account_id, ad_name, adset_id, creative_id):
+    if not account_id.startswith('act_'):
+        account_id = f"act_{account_id}"
     url = f"https://graph.facebook.com/v21.0/{account_id}/ads"
 
     payload = {

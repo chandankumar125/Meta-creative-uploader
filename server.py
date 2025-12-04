@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from facebook.csv_handler import process_csv
@@ -23,10 +23,17 @@ app.add_middleware(
 
 app.include_router(facebook_router, prefix="/facebook", tags=["Facebook"])
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 # Home
 @app.get("/")
 def home():
-    return {"message": "Meta CSV Uploader Running"}
+    return {
+        "message": "Meta CSV Uploader Running",
+        "ad_account_id": AD_ACCOUNT_ID
+    }
 
 # Facebook login POST endpoint
 @app.post("/facebook/login")
@@ -75,7 +82,8 @@ async def upload_campaign_csv(file: UploadFile = File(...)):
         return {"error": "Upload only CSV files"}
 
     try:
-        results = await process_csv(file, AD_ACCOUNT_ID)
+        # Only pass the file; access token is obtained inside process_csv
+        results = await process_csv(file)
         return {"status": "success", "results": results}
     except Exception as e:
         return {"status": "error", "message": str(e)}
