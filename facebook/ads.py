@@ -35,8 +35,9 @@ def create_campaign(access_token, account_id, name, objective, special_ad_catego
 # --------------------------
 # 2. Create Ad Set
 # --------------------------
-def create_adset(access_token, account_id, name, daily_budget,
-                 optimization_goal, pixel_id, campaign_id, start_time, end_time):
+def create_adset(access_token, account_id, name, daily_budget=None, lifetime_budget=None,
+                 optimization_goal="PURCHASE", pixel_id=None, campaign_id=None,
+                 start_time=None, end_time=None, is_budget_sharing_enabled=False):
     if not account_id.startswith('act_'):
         account_id = f"act_{account_id}"
     url = f"https://graph.facebook.com/v21.0/{account_id}/adsets"
@@ -44,15 +45,22 @@ def create_adset(access_token, account_id, name, daily_budget,
     payload = {
         "access_token": access_token,
         "name": name,
-        "daily_budget": int(daily_budget),
         "billing_event": "IMPRESSIONS",
         "optimization_goal": optimization_goal,
         "campaign_id": campaign_id,
-        "promoted_object": {"pixel_id": pixel_id},
+        "promoted_object": {"pixel_id": pixel_id} if pixel_id else {},
         "start_time": start_time,
         "end_time": end_time,
-        "status": "PAUSED"
+        "status": "PAUSED",
     }
+
+    # Use campaign-level budgets only if ad set budget is not provided
+    if daily_budget:
+        payload["daily_budget"] = int(daily_budget)
+        payload["is_adset_budget_sharing_enabled"] = is_budget_sharing_enabled
+    elif lifetime_budget:
+        payload["lifetime_budget"] = int(lifetime_budget)
+        payload["is_adset_budget_sharing_enabled"] = is_budget_sharing_enabled
 
     res = requests.post(url, data=payload).json()
     if "error" in res:
